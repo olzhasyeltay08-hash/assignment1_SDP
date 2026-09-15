@@ -1,0 +1,8 @@
+git init
+git add .
+git commit -m "feat: initial domain model and basic classes"
+git commit -m "refactor: apply Builder Pattern to GamingPC"
+git commit -m "feat: add single-field and cross-field validation rules"
+git commit -m "feat: implement PCDirector with preset configurations"
+git commit -m "test: add unit tests for valid, invalid, and boundary cases"
+git commit -m "docs: prepare assignment code for report"

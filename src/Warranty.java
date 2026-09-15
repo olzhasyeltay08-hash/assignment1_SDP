@@ -1,0 +1,1 @@
+public record Warranty(int months, boolean onSiteSupport) {}
