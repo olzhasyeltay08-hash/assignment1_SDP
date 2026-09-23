@@ -1,88 +1,53 @@
-README.md
-Assignment 1 — Builder Pattern (Gaming PC Configuration)
+# Assignment 1 — Builder Pattern Report (Gaming PC Configuration)
 
-About
-This project is for Assignment 1 in Software Design Patterns. It shows how the Builder Pattern works in Java using a Gaming PC example. It allows building a PC step by step with validation and ready presets.
+## Part A — Original Constructor Approach & Design Issues
 
-Main Features
+In the initial implementation, the `GamingPC` object was constructed using a direct, multi-argument constructor containing 10 fields (including standard types, primitives, and a custom `Warranty` value object).
 
-Fluent Builder API for easy method chaining.
+### Design Issues Identified:
+1. **Telescoping Constructor & Poor Readability:** With 10 parameters of similar types (e.g., several `String` and `boolean` flags), calling `new GamingPC("Intel i9", "Z790", 64, 1000, "RTX 4090", 2.0, true, true, "White", warranty)` makes the code extremely difficult to read and understand without looking up parameter definitions.
+2. **High Error Prone (Argument Swapping):** Passing multiple contiguous `boolean` flags (e.g., `liquidCooling`, `rgbLighting`) or `int` parameters creates a high risk of inadvertently swapping arguments. The compiler cannot detect swapped parameters of identical types, leading to silent bugs at runtime.
+3. **Lack of Validation During Construction:** Validating parameters inside a complex constructor or forcing clients to perform pre-checks before object instantiation leads to duplicate code and scattered logic across client files.
 
-Validation for parameters, including single-field checks and dependent rules like RTX 4090 requiring at least 850W PSU.
+---
 
-Director with Budget, Balanced, and Performance presets.
+## Part B — Refactoring to Builder Pattern
 
-10 automated tests covering valid builds, invalid data, boundaries, and builder reuse.
+The complex construction logic was refactored by moving fields into an inner static `Builder` class. Method chaining (Fluent API) was introduced with domain-oriented method names such as `enableLiquidCooling()` and `enableRgbLighting()`.
 
-Project Files
+---
 
-src/GamingPC.java: Main class and Builder logic.
+## Part C — Validation Challenge
 
-src/Warranty.java: Warranty class.
+Validation logic is strictly enforced inside the `validate()` method prior to object instantiation during the `.build()` call:
 
-src/PCDirector.java: Presets for PC configurations.
+### Single-field Validation Rules:
+1. **RAM Capacity Check:** Minimum required RAM is 8 GB (`ramGb >= 8`).
+2. **PSU Capacity Check:** Minimum required power supply is 400 W (`powerSupplyW >= 400`).
+3. **Storage Check:** Storage must be greater than 0 TB (`storageTb > 0`).
 
-src/Main.java: Main class to run the program.
+### Cross-field Validation Rules:
+1. **High-End GPU Dependency:** If `gpu` contains `"RTX 4090"`, `powerSupplyW` must be at least 850 W.
+2. **Liquid Cooling Dependency:** If `liquidCooling` is enabled, `powerSupplyW` must be at least 600 W.
 
-test/GamingPCTest.java: Test suite with 10 tests.
+---
 
-How to Run
+## Part D — Preset Configurations (Director)
 
-Run src/Main.java to test PC construction.
+The `PCDirector` class encapsulates predefined system assembly steps to avoid duplicating Builder calls across client code:
+- `constructBudgetPC()`: Entry-level gaming setup with essential specifications.
+- `constructBalancedPC()`: Mid-range build targeting optimal price-to-performance ratio.
+- `constructPerformancePC()`: Enthusiast-grade system with liquid cooling, high-end GPU, and extended warranty.
+  *(Outputs "🍌 Performance PC built successfully!" upon creation)*[cite: 1].
 
-Run test/GamingPCTest.java to execute automated tests.
+---
 
-report.md
-Assignment 1 Report: Builder Pattern
+## Part E — Clean Code (Chapter 3) Transformations
 
-Domain and Constraints
-
-Domain: Gaming PC Construction
-
-Constraint 1: RTX 4090 GPU needs a Power Supply of at least 850W
-
-Constraint 2: Liquid Cooling needs a Power Supply of at least 600W
-
-Preset: PERFORMANCE build prints a banana emoji in console when built
-
-Part A - Problems with Conventional Construction
-
-Telescoping Constructor: Having 10+ parameters in one constructor makes it hard to read and hard to pass arguments correctly.
-
-Positional Parameter Errors: It is easy to accidentally swap values of the same type, like RAM and Power Supply integers.
-
-Complex Validation: Putting multi-field validation inside a big constructor makes the code messy and hard to maintain.
-
-Part C - Validation Rules
-
-Single-field: RAM must be >= 8GB, Power Supply >= 400W, Storage > 0TB.
-
-Cross-field: RTX 4090 needs >= 850W PSU, and Liquid Cooling needs >= 600W PSU.
-
-Part E - Clean Code Principles Applied
-
-Small Functions: Configuration steps are split into short methods with clear duties.
-
-Descriptive Naming: Used enableLiquidCooling() instead of passing setLiquidCooling(true).
-
-Command-Query Separation: Builder methods modify internal values and return this for chaining.
-
-Part F - Design Decision
-
-Decision: Validation is placed inside Builder.build() right before creating the GamingPC object.
-
-Alternative: Validating inside the GamingPC constructor.
-
-Reasoning: This keeps validation logic inside the Builder and guarantees that the GamingPC instance is always valid and immutable.
-
-Part G - UML Roles
-
-Product: GamingPC
-
-Builder: GamingPC.Builder
-
-Director: PCDirector
-
-Value Object: Warranty
-
-Client: Main
+### Example 1: Avoiding Flag Arguments & Descriptive Naming
+- **BEFORE:**
+  ```java
+  public Builder setLiquidCooling(boolean enabled) {
+      this.liquidCooling = enabled;
+      return this;
+  }
